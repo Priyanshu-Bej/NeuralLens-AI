@@ -187,7 +187,7 @@ class SettingsScreen extends StatelessWidget {
                             : 'Gemini not configured',
                         subtitle: config.isGeminiConfigured
                             ? 'Model: ${config.geminiModel}'
-                            : 'Run with --dart-define=GEMINI_API_KEY=YOUR_KEY',
+                            : 'Add GEMINI_API_KEY to .env',
                         trailing: Pill(
                           label: config.isGeminiConfigured ? 'Ready' : 'Off',
                           color: config.isGeminiConfigured

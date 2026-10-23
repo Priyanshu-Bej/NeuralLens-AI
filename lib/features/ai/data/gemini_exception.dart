@@ -49,8 +49,9 @@ class GeminiException implements Exception {
 
   String get message => switch (kind) {
     GeminiErrorKind.missingKey =>
-      'Run the app with --dart-define=GEMINI_API_KEY=YOUR_KEY to enable AI '
-          'features. Your local scripts and teleprompter work without it.',
+      'Add GEMINI_API_KEY to the project\'s .env file and run with '
+          '--dart-define-from-file=.env to enable AI features. Your local '
+          'scripts and teleprompter work without it.',
     GeminiErrorKind.network =>
       'Check your internet connection and try again. Saved scripts remain '
           'available offline.',
@@ -63,7 +64,7 @@ class GeminiException implements Exception {
           'Check the key in Google AI Studio.',
     GeminiErrorKind.modelUnavailable =>
       'The configured model is not available. Set a current model with '
-          '--dart-define=GEMINI_MODEL=<model-id>.',
+          'GEMINI_MODEL in .env.',
     GeminiErrorKind.badRequest =>
       'Gemini could not process this request. Try rephrasing your notes.',
     GeminiErrorKind.server =>

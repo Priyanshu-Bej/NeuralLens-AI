@@ -78,7 +78,7 @@ void main() {
 
     expect(find.text('Connect Gemini to generate'), findsOneWidget);
     expect(
-      find.text('flutter run --dart-define=GEMINI_API_KEY=YOUR_KEY'),
+      find.text('flutter run --dart-define-from-file=.env'),
       findsOneWidget,
     );
     // Generate is disabled without a key: tapping it starts nothing.

@@ -30,26 +30,25 @@ flutter pub get
 flutter analyze
 flutter test
 
-# Without AI (local scripts, teleprompter and simulator all work):
-flutter run
+# One-time: create your local config (git-ignored) and fill in GEMINI_API_KEY
+cp .env.example .env
 
-# With Gemini:
-flutter run --dart-define=GEMINI_API_KEY=YOUR_KEY
-
-# Optional: choose a different model
-flutter run --dart-define=GEMINI_API_KEY=YOUR_KEY --dart-define=GEMINI_MODEL=gemini-3.8-flash
+# Run with the keys from .env (VS Code's launch configs already pass this)
+flutter run --dart-define-from-file=.env
 
 # Build an APK
-flutter build apk --debug --dart-define=GEMINI_API_KEY=YOUR_KEY
+flutter build apk --debug --dart-define-from-file=.env
 ```
+
+Without a key (or without the flag), the app still runs: local scripts, the teleprompter and the simulator all work.
 
 ## Gemini configuration
 
-- Get a key from [Google AI Studio](https://aistudio.google.com/) and pass it with `--dart-define=GEMINI_API_KEY=...`. The app reads it through `String.fromEnvironment` in `lib/core/config/app_config.dart`.
-- The default model is `gemini-3.5-flash-lite`. In October 2026 the [Gemini models page](https://ai.google.dev/gemini-api/docs/models) recommended 3.5 Flash-Lite or 3.8 Flash for new projects. You can override it with `GEMINI_MODEL`.
+- Create a key at [Google AI Studio → API keys](https://aistudio.google.com/apikey). Restrict it with **Add restrictions → Restrict to Gemini API only**. Put it in `.env` as `GEMINI_API_KEY=...`. `--dart-define-from-file=.env` passes it to the build, and the app reads it through `String.fromEnvironment` in `lib/core/config/app_config.dart`. No Firebase project is needed for development.
+- The default model is `gemini-3.5-flash-lite`. In October 2026 the [Gemini models page](https://ai.google.dev/gemini-api/docs/models) recommended 3.5 Flash-Lite or 3.8 Flash for new projects. You can override it with `GEMINI_MODEL` in `.env`.
 - Requests use `models.generateContent` (v1beta), with the key in the `x-goog-api-key` header and `responseMimeType: application/json` plus a `responseSchema`. Responses are validated before display. Malformed output never crashes the app.
-- **Security:** a `--dart-define` key is compiled into the APK and can be extracted. Use this only for local development and testing. For a public release, move Gemini calls behind your own backend or use Firebase AI Logic with App Check.
-- Never commit keys. `.env` files and `android/local.properties` are git-ignored.
+- **Security:** a key passed with `--dart-define` or `--dart-define-from-file` is compiled into the APK and can be extracted. Use this only for local development and testing. For a public release, move Gemini calls behind your own backend or use Firebase AI Logic with App Check.
+- Never commit keys. `.env` and `android/local.properties` are git-ignored. Only `.env.example`, which has no values, is committed.
 
 ## Meta glasses setup
 
@@ -61,12 +60,14 @@ These steps were verified against the official [Wearables docs](https://wearable
 4. Wear the glasses and tap **Connect glasses**. Then present a script in **Glasses** mode.
 5. **Neural Band input** uses the experimental Inputs capability. It must be **enabled for your app in the Wearables Developer Center**; without that the SDK reports `PERMISSION_DENIED` and the app falls back to on-screen controls.
 
-Developer Mode uses `0` for the application ID and client token. For a release, put the values from the Wearables Developer Center in `android/local.properties`, which is git-ignored:
+Developer Mode uses `0` for the application ID and client token. For a release, put the values from the Wearables Developer Center in `.env`, which Gradle also reads:
 
 ```properties
-mwdat_application_id=YOUR_APP_ID
-mwdat_client_token=YOUR_CLIENT_TOKEN
+MWDAT_APPLICATION_ID=YOUR_APP_ID
+MWDAT_CLIENT_TOKEN=YOUR_CLIENT_TOKEN
 ```
+
+The older `mwdat_application_id` / `mwdat_client_token` entries in `android/local.properties` still work as a fallback.
 
 Also register the app's callback URL scheme (`neurallens`, declared in `AndroidManifest.xml`) in the Developer Center.
 

@@ -8,12 +8,19 @@ plugins {
 
 // Meta Wearables DAT credentials. "0" works with Developer Mode in the Meta AI
 // app; production values come from the Wearables Developer Center and belong
-// in android/local.properties (git-ignored), never in source control.
-val localProperties =
+// in the project's .env (MWDAT_*) or android/local.properties (mwdat_*), both
+// git-ignored, never in source control. .env wins when both are set.
+fun loadProperties(path: String) =
     Properties().apply {
-        val file = rootProject.file("local.properties")
+        val file = rootProject.file(path)
         if (file.exists()) file.inputStream().use { load(it) }
     }
+val dotEnv = loadProperties("../.env")
+val localProperties = loadProperties("local.properties")
+
+fun mwdatValue(name: String) =
+    dotEnv.getProperty("MWDAT_${name.uppercase()}")?.trim()?.takeIf { it.isNotEmpty() }
+        ?: localProperties.getProperty("mwdat_$name", "0")
 
 android {
     namespace = "com.priyanshubej.neurallens"
@@ -33,10 +40,8 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        manifestPlaceholders["mwdat_application_id"] =
-            localProperties.getProperty("mwdat_application_id", "0")
-        manifestPlaceholders["mwdat_client_token"] =
-            localProperties.getProperty("mwdat_client_token", "0")
+        manifestPlaceholders["mwdat_application_id"] = mwdatValue("application_id")
+        manifestPlaceholders["mwdat_client_token"] = mwdatValue("client_token")
     }
 
     buildTypes {

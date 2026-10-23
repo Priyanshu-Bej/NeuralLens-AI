@@ -516,7 +516,7 @@ class _GeminiSetupCard extends StatelessWidget {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SelectableText(
-                'flutter run --dart-define=GEMINI_API_KEY=YOUR_KEY',
+                'flutter run --dart-define-from-file=.env',
                 maxLines: 1,
                 style: context.mono(size: 12, color: c.textPrimary),
               ),
