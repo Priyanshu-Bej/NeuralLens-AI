@@ -1,18 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- NeuralLens mark: lens outline with a focus dot (adaptive icon foreground,
-     drawn inside the 66dp safe zone). -->
+<!-- NeuralLens mark: display glasses with a glowing panel in the right lens
+     (adaptive icon foreground, inside the 66dp safe zone). Same geometry as
+     NeuralLensLogo in lib/core/widgets/common.dart. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <path android:pathData="M27,45 L48,45 Q51,45 51,48 C50.5,53 48,63 42,63 L33,63 C27,63 24.5,53 24,48 Q24,45 27,45 Z" android:fillColor="#0FFFFFFF" />
+    <path android:pathData="M60,45 L81,45 Q84,45 84,48 C83.5,53 81,63 75,63 L66,63 C60,63 57.5,53 57,48 Q57,45 60,45 Z" android:fillColor="#0FFFFFFF" />
+    <group>
+        <clip-path android:pathData="M60,45 L81,45 Q84,45 84,48 C83.5,53 81,63 75,63 L66,63 C60,63 57.5,53 57,48 Q57,45 60,45 Z" />
+        <path android:pathData="M66.1,47.6 L75.9,47.6 Q78.5,47.6 78.5,50.2 L78.5,53.8 Q78.5,56.4 75.9,56.4 L66.1,56.4 Q63.5,56.4 63.5,53.8 L63.5,50.2 Q63.5,47.6 66.1,47.6 Z" android:fillColor="#405BE4D8" />
+        <path android:pathData="M66.6,49 L75.4,49 Q77,49 77,50.6 L77,53.4 Q77,55 75.4,55 L66.6,55 Q65,55 65,53.4 L65,50.6 Q65,49 66.6,49 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="24" android:startY="45"
+                android:endX="84" android:endY="63"
+                android:startColor="@color/neurallens_lime"
+                android:endColor="@color/neurallens_aqua" />
+        </aapt:attr>
+        </path>
+    </group>
     <path
-        android:pathData="M30,54 Q54,30 78,54 Q54,78 30,54 Z"
-        android:strokeColor="@color/neurallens_lime"
-        android:strokeWidth="4.5"
+        android:pathData="M27,45 L48,45 Q51,45 51,48 C50.5,53 48,63 42,63 L33,63 C27,63 24.5,53 24,48 Q24,45 27,45 Z"
+        android:strokeWidth="5"
         android:strokeLineJoin="round"
-        android:fillColor="#00000000" />
+        android:strokeLineCap="round"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="24" android:startY="45"
+                android:endX="84" android:endY="63"
+                android:startColor="@color/neurallens_lime"
+                android:endColor="@color/neurallens_aqua" />
+        </aapt:attr>
+    </path>
     <path
-        android:pathData="M54,48.5 A5.5,5.5 0 1,1 53.99,48.5 Z"
-        android:fillColor="@color/neurallens_lime" />
+        android:pathData="M60,45 L81,45 Q84,45 84,48 C83.5,53 81,63 75,63 L66,63 C60,63 57.5,53 57,48 Q57,45 60,45 Z"
+        android:strokeWidth="5"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="24" android:startY="45"
+                android:endX="84" android:endY="63"
+                android:startColor="@color/neurallens_lime"
+                android:endColor="@color/neurallens_aqua" />
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M51,48 Q54,45.5 57,48"
+        android:strokeWidth="5"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="24" android:startY="45"
+                android:endX="84" android:endY="63"
+                android:startColor="@color/neurallens_lime"
+                android:endColor="@color/neurallens_aqua" />
+        </aapt:attr>
+    </path>
 </vector>

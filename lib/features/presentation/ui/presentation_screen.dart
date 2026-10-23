@@ -238,6 +238,43 @@ class _PresentationViewState extends State<_PresentationView>
     if (_controlsVisible) _scheduleHide();
   }
 
+  /// Wraps a control so using it keeps the controls up a little longer.
+  VoidCallback _keepVisible(VoidCallback action) => () {
+    action();
+    _scheduleHide();
+  };
+
+  /// Swipe left for the next card, right for the previous one.
+  void _onSwipe(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity.abs() < 250) return;
+    HapticFeedback.selectionClick();
+    velocity < 0 ? _cubit.nextCue() : _cubit.previousCue();
+  }
+
+  /// Keyboards and Bluetooth presentation remotes (which send arrow,
+  /// page and space keys).
+  late final Map<ShortcutActivator, VoidCallback> _shortcuts = {
+    for (final key in [
+      LogicalKeyboardKey.arrowRight,
+      LogicalKeyboardKey.arrowDown,
+      LogicalKeyboardKey.pageDown,
+    ])
+      SingleActivator(key): _cubit.nextCue,
+    for (final key in [
+      LogicalKeyboardKey.arrowLeft,
+      LogicalKeyboardKey.arrowUp,
+      LogicalKeyboardKey.pageUp,
+    ])
+      SingleActivator(key): _cubit.previousCue,
+    const SingleActivator(LogicalKeyboardKey.space): _cubit.togglePlay,
+    const SingleActivator(LogicalKeyboardKey.equal): _cubit.faster,
+    const SingleActivator(LogicalKeyboardKey.add): _cubit.faster,
+    const SingleActivator(LogicalKeyboardKey.numpadAdd): _cubit.faster,
+    const SingleActivator(LogicalKeyboardKey.minus): _cubit.slower,
+    const SingleActivator(LogicalKeyboardKey.numpadSubtract): _cubit.slower,
+  };
+
   // ---- Build --------------------------------------------------------------
 
   @override
@@ -279,47 +316,58 @@ class _PresentationViewState extends State<_PresentationView>
           }
           final phone = s.settings.mode == PresentationMode.phone;
           final showChrome = _controlsVisible || !s.isPlaying;
-          return Scaffold(
-            backgroundColor: phone ? Palette.ink : c.background,
-            body: Stack(
-              children: [
-                Positioned.fill(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: _toggleControls,
-                    child: phone
-                        ? PhoneTeleprompter(
-                            cues: s.cues,
-                            currentIndex: s.cueIndex,
-                            settings: s.settings,
-                            controller: _scroll,
-                            cueKeys: _cueKeys,
-                            viewportKey: _viewportKey,
-                            onScroll: _syncFromScroll,
-                          )
-                        : _GlassesModeView(cue: _cubit.glassesCueFor(s)),
-                  ),
+          return CallbackShortcuts(
+            bindings: _shortcuts,
+            child: Focus(
+              autofocus: true,
+              child: Scaffold(
+                backgroundColor: phone ? Palette.ink : c.background,
+                body: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _toggleControls,
+                        onHorizontalDragEnd: _onSwipe,
+                        child: phone
+                            ? PhoneTeleprompter(
+                                cues: s.cues,
+                                currentIndex: s.cueIndex,
+                                settings: s.settings,
+                                controller: _scroll,
+                                cueKeys: _cueKeys,
+                                viewportKey: _viewportKey,
+                                onScroll: _syncFromScroll,
+                              )
+                            : _GlassesModeView(cue: _cubit.glassesCueFor(s)),
+                      ),
+                    ),
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: _GradientProgress(value: s.progress),
+                    ),
+                    _Chrome(
+                      visible: showChrome,
+                      top: _TopBar(state: s),
+                      bottom: TeleprompterControls(
+                        state: s,
+                        onTogglePlay: _cubit.togglePlay,
+                        onPreviousCue: _keepVisible(_cubit.previousCue),
+                        onNextCue: _keepVisible(_cubit.nextCue),
+                        onPreviousSection: _keepVisible(_cubit.previousSection),
+                        onNextSection: _keepVisible(_cubit.nextSection),
+                        onRestart: _cubit.restart,
+                        onSlower: _keepVisible(_cubit.slower),
+                        onFaster: _keepVisible(_cubit.faster),
+                        onSpeed: (speed) =>
+                            _keepVisible(() => _cubit.setSpeed(speed))(),
+                      ),
+                    ),
+                  ],
                 ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: _GradientProgress(value: s.progress),
-                ),
-                _Chrome(
-                  visible: showChrome,
-                  top: _TopBar(state: s),
-                  bottom: TeleprompterControls(
-                    state: s,
-                    onTogglePlay: _cubit.togglePlay,
-                    onPreviousCue: _cubit.previousCue,
-                    onNextCue: _cubit.nextCue,
-                    onPreviousSection: _cubit.previousSection,
-                    onNextSection: _cubit.nextSection,
-                    onRestart: _cubit.restart,
-                  ),
-                ),
-              ],
+              ),
             ),
           );
         },
@@ -390,7 +438,8 @@ class _TopBar extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  'CARD ${state.cueIndex + 1} / ${state.cues.length}'
+                  'CARD ${state.cueIndex + 1} / ${state.cues.length} · '
+                  '${state.settings.wordsPerMinute} WPM'
                   '${state.status == PlaybackStatus.finished ? ' · FINISHED' : ''}',
                   style: context.mono(size: 11),
                 ),

@@ -47,5 +47,6 @@ app.*.map.json
 # Local secrets — never commit API keys or Meta client tokens.
 .env
 .env.*
+!.env.example
 *.env
 secrets/

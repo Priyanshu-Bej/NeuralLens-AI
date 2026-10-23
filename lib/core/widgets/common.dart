@@ -7,53 +7,114 @@ import '../theme/tokens.dart';
 import 'neural_lens_button.dart';
 import 'pressable.dart';
 
-/// Eye/cue-inspired mark: a lens outline swept lime → aqua with a focus dot.
+/// App mark: bold display glasses with a glowing heads-up panel in the right
+/// lens, on a dark rounded tile. Matches the launcher icon
+/// (`res/drawable/ic_launcher_foreground.xml`), which uses the same geometry.
 class NeuralLensLogo extends StatelessWidget {
-  const NeuralLensLogo({super.key, this.size = 28});
+  const NeuralLensLogo({super.key, this.size = 28, this.rounded = true});
 
   final double size;
+
+  /// Square corners for exported app icons, which the OS masks itself.
+  final bool rounded;
 
   @override
   Widget build(BuildContext context) => SizedBox.square(
     dimension: size,
-    child: CustomPaint(
-      painter: _LogoPainter(context.nl.accent, context.nl.accent2),
-    ),
+    child: CustomPaint(painter: _LogoPainter(rounded: rounded)),
   );
 }
 
 class _LogoPainter extends CustomPainter {
-  _LogoPainter(this.from, this.to);
+  const _LogoPainter({required this.rounded});
 
-  final Color from;
-  final Color to;
+  final bool rounded;
+
+  // Geometry is in the launcher icon's 108-unit space; the tile shows the
+  // [_viewStart, _viewStart + _viewSize] window of it.
+  static const _viewStart = 14.0;
+  static const _viewSize = 80.0;
+
+  /// Wayfarer-style lens: straight brow, tapering sides, flat rounded base.
+  static Path lens(double x0, double x1) {
+    const y0 = 45.0, y1 = 63.0, r = 3.0;
+    return Path()
+      ..moveTo(x0 + r, y0)
+      ..lineTo(x1 - r, y0)
+      ..quadraticBezierTo(x1, y0, x1, y0 + r)
+      ..cubicTo(x1 - 0.5, y0 + 8, x1 - 3, y1, x1 - 9, y1)
+      ..lineTo(x0 + 9, y1)
+      ..cubicTo(x0 + 3, y1, x0 + 0.5, y0 + 8, x0, y0 + r)
+      ..quadraticBezierTo(x0, y0, x0 + r, y0)
+      ..close();
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
-    final shader = ui.Gradient.linear(Offset.zero, Offset(s, s), [from, to]);
-    final stroke = Paint()
-      ..shader = shader
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = s * 0.09
-      ..strokeCap = StrokeCap.round;
-    // Lens outline (almond / eye shape).
-    final path = Path()
-      ..moveTo(s * 0.06, s * 0.5)
-      ..quadraticBezierTo(s * 0.5, s * 0.02, s * 0.94, s * 0.5)
-      ..quadraticBezierTo(s * 0.5, s * 0.98, s * 0.06, s * 0.5)
-      ..close();
-    canvas.drawPath(path, stroke);
-    // Focus dot.
-    canvas.drawCircle(
-      Offset(s * 0.5, s * 0.5),
-      s * 0.13,
-      Paint()..shader = shader,
+    // Dark tile with a soft top light, like the launcher icon.
+    final tile = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(rounded ? s * 0.28 : 0),
     );
+    canvas.drawRRect(
+      tile,
+      Paint()
+        ..shader = ui.Gradient.linear(Offset.zero, Offset(0, s), const [
+          Palette.graphite800,
+          Palette.ink,
+        ]),
+    );
+
+    canvas
+      ..save()
+      ..scale(s / _viewSize)
+      ..translate(-_viewStart, -_viewStart);
+
+    final brand = ui.Gradient.linear(
+      const Offset(24, 45),
+      const Offset(84, 63),
+      [Palette.lime, Palette.aqua],
+    );
+    final left = lens(24, 51);
+    final right = lens(57, 84);
+
+    // Lens tint, then the in-lens display with its glow, kept inside the
+    // right lens.
+    final tint = Paint()..color = Colors.white.withValues(alpha: 0.06);
+    canvas
+      ..drawPath(left, tint)
+      ..drawPath(right, tint)
+      ..save()
+      ..clipPath(right)
+      ..drawRRect(
+        RRect.fromLTRBR(63.5, 47.6, 78.5, 56.4, const Radius.circular(2.6)),
+        Paint()..color = Palette.aqua.withValues(alpha: 0.25),
+      )
+      ..drawRRect(
+        RRect.fromLTRBR(65, 49, 77, 55, const Radius.circular(1.6)),
+        Paint()..shader = brand,
+      )
+      ..restore();
+
+    final frame = Paint()
+      ..shader = brand
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+    final bridge = Path()
+      ..moveTo(51, 48)
+      ..quadraticBezierTo(54, 45.5, 57, 48);
+    canvas
+      ..drawPath(left, frame)
+      ..drawPath(right, frame)
+      ..drawPath(bridge, frame)
+      ..restore();
   }
 
   @override
-  bool shouldRepaint(_LogoPainter old) => old.from != from || old.to != to;
+  bool shouldRepaint(_LogoPainter old) => old.rounded != rounded;
 }
 
 class NeuralLensWordmark extends StatelessWidget {
@@ -63,8 +124,8 @@ class NeuralLensWordmark extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      const NeuralLensLogo(size: 24),
-      const SizedBox(width: Space.sm),
+      const NeuralLensLogo(size: 30),
+      const SizedBox(width: Space.sm + 2),
       Text(
         'NeuralLens',
         style: context.text.titleMedium!.copyWith(

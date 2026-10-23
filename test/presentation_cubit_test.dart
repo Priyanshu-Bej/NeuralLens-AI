@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:neurallens/features/presentation/logic/presentation_cubit.dart';
 import 'package:neurallens/features/presentation/models/presentation_settings.dart';
+import 'package:neurallens/features/scripts/util/duration_estimator.dart';
 import 'package:neurallens/features/wearables/models/wearables_models.dart';
 
 import 'helpers/fakes.dart';
@@ -141,6 +142,45 @@ void main() {
         cubit.tick(const Duration(seconds: 1));
       }
       expect(cubit.state.status, PlaybackStatus.finished);
+    });
+
+    test('speed controls step and clamp, and persist', () {
+      PresentationSettings? reported;
+      final cubit = PresentationCubit(
+        script: testScript(),
+        settings: glasses,
+        onSettingsChanged: (s) => reported = s,
+      );
+      final start = cubit.state.settings.speed;
+      cubit.faster();
+      expect(cubit.state.settings.speed, start + 1);
+      expect(reported?.speed, start + 1);
+      cubit.slower();
+      expect(cubit.state.settings.speed, start);
+
+      cubit.setSpeed(99);
+      expect(cubit.state.settings.speed, PresentationSettings.maxSpeed);
+      cubit.faster();
+      expect(cubit.state.settings.speed, PresentationSettings.maxSpeed);
+      cubit.setSpeed(-5);
+      expect(cubit.state.settings.speed, PresentationSettings.minSpeed);
+    });
+
+    test('changing speed mid-card keeps time already spent on it', () {
+      final cubit = build(settings: glasses)..play();
+      // Just short of the current card's dwell at the starting speed.
+      final dwell = DurationEstimator.cueDuration(
+        cubit.state.currentCue!.text,
+        wpm: cubit.state.settings.wordsPerMinute,
+      );
+      cubit.tick(dwell - const Duration(milliseconds: 100));
+      expect(cubit.state.cueIndex, 0);
+
+      // Faster pace: the elapsed time now covers the shorter dwell.
+      cubit
+        ..setSpeed(PresentationSettings.maxSpeed)
+        ..tick(const Duration(milliseconds: 1));
+      expect(cubit.state.cueIndex, 1);
     });
 
     test('tick is ignored when paused or in phone mode', () {

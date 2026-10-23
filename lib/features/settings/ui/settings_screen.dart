@@ -451,16 +451,7 @@ class _VersionTile extends StatelessWidget {
         padding: const EdgeInsets.all(Space.lg),
         child: Row(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: ShapeDecoration(
-                color: context.nl.surfaceHigh,
-                shape: Shapes.of(12),
-              ),
-              child: const NeuralLensLogo(size: 22),
-            ),
+            const NeuralLensLogo(size: 36),
             const SizedBox(width: Space.md + 2),
             Expanded(
               child: Column(

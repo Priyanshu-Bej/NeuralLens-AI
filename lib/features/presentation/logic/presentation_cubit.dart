@@ -275,7 +275,9 @@ class PresentationCubit extends Cubit<PresentationState> {
   void updateSettings(PresentationSettings settings) {
     if (settings == state.settings) return;
     final modeChanged = settings.mode != state.settings.mode;
-    _cueElapsed = Duration.zero;
+    // A speed change keeps the time already spent on the current card, so
+    // adjusting pace mid-read doesn't restart it.
+    if (modeChanged) _cueElapsed = Duration.zero;
     _emit(
       state.copyWith(
         settings: settings,
@@ -284,6 +286,14 @@ class PresentationCubit extends Cubit<PresentationState> {
     );
     onSettingsChanged?.call(settings);
   }
+
+  /// Sets the autoplay speed (clamped to the supported range).
+  void setSpeed(int speed) =>
+      updateSettings(state.settings.copyWith(speed: speed));
+
+  void faster() => setSpeed(state.settings.speed + 1);
+
+  void slower() => setSpeed(state.settings.speed - 1);
 
   // ---- Wearable input -----------------------------------------------------
 
