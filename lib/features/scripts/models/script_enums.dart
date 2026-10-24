@@ -41,9 +41,21 @@ enum ScriptTone {
       values.firstWhere((v) => v.name == name, orElse: () => conversational);
 }
 
-/// Output language. English only for now; add entries here to expand.
+/// Output language. Codes match the Glasses Speaker Cue Agent's `language`
+/// values. All are written with spaces between words, which word-based timing
+/// relies on.
 enum ScriptLanguage {
-  english('en', 'English');
+  english('en', 'English'),
+  hindi('hi', 'Hindi'),
+  kannada('kn', 'Kannada'),
+  tamil('ta', 'Tamil'),
+  telugu('te', 'Telugu'),
+  malayalam('ml', 'Malayalam'),
+  marathi('mr', 'Marathi'),
+  bengali('bn', 'Bengali'),
+  spanish('es', 'Spanish'),
+  french('fr', 'French'),
+  german('de', 'German');
 
   const ScriptLanguage(this.code, this.label);
   final String code;

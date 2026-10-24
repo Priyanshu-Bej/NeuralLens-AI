@@ -5,7 +5,12 @@ abstract final class DurationEstimator {
   /// Typical conversational speaking rate.
   static const int defaultWpm = 150;
 
-  static final _word = RegExp(r"[\p{L}\p{N}][\p{L}\p{N}'’\-]*", unicode: true);
+  // \p{M} keeps combining marks (Indic vowel signs, viramas) inside a word;
+  // without it, "ಕನ್ನಡ" would count as several words.
+  static final _word = RegExp(
+    r"[\p{L}\p{N}][\p{L}\p{M}\p{N}'’\-]*",
+    unicode: true,
+  );
 
   static int wordCount(String text) => _word.allMatches(text).length;
 

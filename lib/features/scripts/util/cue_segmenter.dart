@@ -12,7 +12,8 @@ abstract final class CueSegmenter {
   static const int defaultMaxCueChars = 90;
 
   static final _heading = RegExp(r'^\s{0,3}#{1,6}\s+(.*)$');
-  static final _sentenceBreak = RegExp(r'(?<=[.!?…])\s+');
+  // "।" (danda) ends sentences in Hindi, Marathi and Bengali.
+  static final _sentenceBreak = RegExp(r'(?<=[.!?…।])\s+');
   static final _clauseBreak = RegExp(r'(?<=[,;:—–])\s+');
   static final _whitespace = RegExp(r'\s+');
 

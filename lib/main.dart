@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 import 'core/config/app_config.dart';
 import 'data/local/app_database.dart';
+import 'features/ai/data/agent_client.dart';
 import 'features/ai/data/gemini_service.dart';
 import 'features/scripts/data/script_repository.dart';
 import 'features/settings/data/settings_repository.dart';
@@ -42,7 +43,17 @@ Future<void> main() async {
         config: config,
         scripts: ScriptRepository(results.$1),
         settings: SettingsRepository(results.$2),
-        gemini: GeminiService(client: http.Client(), config: config),
+        gemini: GeminiService(
+          client: http.Client(),
+          config: config,
+          agent: config.isAgentConfigured
+              ? AgentClient(
+                  client: http.Client(),
+                  baseUrl: config.agentUrl,
+                  token: config.agentToken,
+                )
+              : null,
+        ),
         wearables: wearables,
       ),
     ),
