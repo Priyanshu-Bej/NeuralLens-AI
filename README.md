@@ -15,6 +15,8 @@
 
 <p align="center">
   <a href="#the-experience">The experience</a> ·
+  <a href="#app-preview">Screenshots &amp; guide</a> ·
+  <a href="#live-demo">Live demo</a> ·
   <a href="#getting-started">Try it locally</a> ·
   <a href="#roadmap">What's next</a> ·
   <a href="LICENSE">MIT license</a> ·
@@ -39,6 +41,125 @@ This README describes the code on `develop`. The [roadmap](#roadmap) links to th
 | ✍️ Prepare | 🕶️ Present | 🤏 Stay in control |
 | --- | --- | --- |
 | **Start with an idea.** Turn a topic or rough notes into a script and readable cue cards. | **Keep your cues in view.** Read from the phone teleprompter or use display glasses. | **Find your rhythm.** Navigate with the Neural Band, adjust your pace, and pick up where you left off. |
+
+<a id="app-preview"></a>
+
+## 📸 See NeuralLens in action
+
+These are **real screenshots from my Android app**, including a session connected to my Meta Ray-Ban Display glasses with the Neural Band active. Follow the walkthrough from creating a script to presenting it on the glasses. **Tap any screenshot to open the original at full size.**
+
+[1. Create](#preview-create) → [2. Review and connect](#preview-connect) → [3. Present](#preview-present) → [Gesture controls](#gesture-controls) · [See a live demo](#live-demo)
+
+<a id="preview-create"></a>
+
+### 1. ✍️ Start with an idea—or a blank page
+
+Open **Create** and choose **Generate with AI**, **Script**, or **Note**. In **AI Script Studio**, enter your topic or rough notes, choose a format and duration, and tap **Generate script**. If you already know what you want to say, start with a blank script and write it yourself.
+
+<table>
+  <tr>
+    <th width="33%">Choose how to start</th>
+    <th width="33%">Shape your AI draft</th>
+    <th width="33%">Write in your own words</th>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><a href="docs/screenshots/create-options.jpg"><img src="docs/screenshots/create-options.jpg" width="240" alt="Create menu offering Generate with AI, a blank Script, or a Note." /></a></td>
+    <td align="center" valign="top"><a href="docs/screenshots/ai-script-studio.jpg"><img src="docs/screenshots/ai-script-studio.jpg" width="240" alt="AI Script Studio with topic input, YouTube video format selected, and duration options." /></a></td>
+    <td align="center" valign="top"><a href="docs/screenshots/script-draft.jpg"><img src="docs/screenshots/script-draft.jpg" width="240" alt="Empty script editor with title, tone, tags, Revise with AI, and Split into cards controls." /></a></td>
+  </tr>
+  <tr>
+    <td>Generate a draft, write a script, or capture a quick note.</td>
+    <td>Give Gemini the topic, format, and target length.</td>
+    <td>Edit freely; add section headings, tone, and tags.</td>
+  </tr>
+</table>
+
+> [!TIP]
+> **AI generation requires your own Gemini API key and internet access.** Follow [Getting started](#getting-started) to configure it. Manual writing and saved scripts work without AI.
+
+<a id="preview-connect"></a>
+
+### 2. 🕶️ Review your script and connect the glasses
+
+Review the generated script, use **Revise with AI** if needed, and choose **Split into cards** to organize it for delivery. The example, **“Discover Incredible India,”** contains **120 words and 11 cards**. Its estimated reading time appears beside the word and card counts.
+
+Open **Glasses** and follow the setup guide to register and connect through Meta AI. For gesture control, check that **Display** is **Ready** and **Neural Band** is **Active**. Then return to the saved script, tap **Present**, and select **Glasses** mode.
+
+<table>
+  <tr>
+    <th width="33%">Review and save</th>
+    <th width="33%">Follow the setup guide</th>
+    <th width="33%">Confirm the live connection</th>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><a href="docs/screenshots/saved-script.jpg"><img src="docs/screenshots/saved-script.jpg" width="240" alt="Saved Discover Incredible India script showing 120 words, approximately 48 seconds, 11 cards, and the Present button." /></a></td>
+    <td align="center" valign="top"><a href="docs/screenshots/glasses-setup.jpg"><img src="docs/screenshots/glasses-setup.jpg" width="240" alt="In-app glasses setup guide covering hardware, Developer Mode, registration, connection, and optional Neural Band access." /></a></td>
+    <td align="center" valign="top"><a href="docs/screenshots/glasses-connected.jpg"><img src="docs/screenshots/glasses-connected.jpg" width="240" alt="Connected Meta Ray-Ban Display glasses with Display Ready and Neural Band Active status." /></a></td>
+  </tr>
+  <tr>
+    <td>Check the wording and cards before tapping <strong>Present</strong>.</td>
+    <td>The app walks through setup and offers a phone simulator.</td>
+    <td>This screenshot shows my physical glasses connected and band input active.</td>
+  </tr>
+</table>
+
+<a id="preview-present"></a>
+
+### 3. 🎤 Present one card at a time
+
+The screenshots below show **cards 3, 7, and 10 from the same presentation**. The **Live on Meta RB Display** indicator shows the connected glasses session. Each card keeps the current section and speaking text prominent, with the next cue and your position underneath.
+
+<table>
+  <tr>
+    <th width="33%">Card 3 · Explore the sights</th>
+    <th width="33%">Card 7 · Taste the food</th>
+    <th width="33%">Card 10 · Plan your trip</th>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><a href="docs/screenshots/glasses-card-explore.jpg"><img src="docs/screenshots/glasses-card-explore.jpg" width="240" alt="Live glasses presentation preview, card 3 of 11, with Explore the sights heading and text about the Taj Mahal." /></a></td>
+    <td align="center" valign="top"><a href="docs/screenshots/glasses-card-food.jpg"><img src="docs/screenshots/glasses-card-food.jpg" width="240" alt="Live glasses presentation preview, card 7 of 11, with Taste the food heading and a cue about Indian food." /></a></td>
+    <td align="center" valign="top"><a href="docs/screenshots/glasses-card-closing.jpg"><img src="docs/screenshots/glasses-card-closing.jpg" width="240" alt="Live glasses presentation preview, card 10 of 11, with Plan your trip heading, closing text, and Normal speed selected." /></a></td>
+  </tr>
+  <tr>
+    <td>Read the current cue and glance at what comes next.</td>
+    <td>Move between cards while keeping your place in the script.</td>
+    <td>Set your pace with the phone controls and continue through the closing cards.</td>
+  </tr>
+</table>
+
+#### What appears inside the glasses?
+
+**The same card headings and speaking text shown in these previews are sent to the glasses.** The card structure carries over: section heading, current lines, next cue, and card position. As you advance, the card updates on the glasses too.
+
+The glasses use their native display layout for this content, so typography, colors, and spacing can differ from the phone preview. The phone's decorative card border, toolbar, and playback buttons are part of the companion interface. **These screenshots were captured on the phone, not from inside the lenses.**
+
+<a id="gesture-controls"></a>
+
+### 🤏 Present without touching the phone
+
+Once the presentation is running and Neural Band input is active, **finger gestures let you navigate and control playback without touching the phone**. You can keep reading the cues on the glasses while presenting.
+
+| Wearable action | What it does |
+| --- | --- |
+| **Forward navigation** | Advance to the next card. |
+| **Backward navigation** | Return to the previous card. |
+| **Select** | Pause or resume by default; optionally configure it to advance a card. |
+
+In **Settings**, you can invert the navigation direction and change the select action. The exact physical gesture follows the Neural Band's input mapping. Speed adjustments, restart, and other presentation controls are also available on the phone.
+
+<a id="live-demo"></a>
+
+### 🎥 Want to see it on the actual glasses?
+
+I have the **Meta Ray-Ban Display glasses and Neural Band with me**, and I’ve tested the teleprompter on both. I can’t capture screenshots directly from inside the glasses in my current setup, so the images above show the companion app during use.
+
+**If I get the opportunity to showcase NeuralLens, I’m happy to bring the hardware and give a live demo.** I can walk through generating a script, turning it into cards, displaying the cues inside the glasses, and moving between them with finger gestures without touching the phone.
+
+For a project review, showcase, or demo, [connect with me on LinkedIn](https://www.linkedin.com/in/priyanshubej/).
+
+[Back to the screenshot guide ↑](#app-preview) · [Set up NeuralLens locally →](#getting-started)
+
+---
 
 ## 💡 Why I built it
 
@@ -90,14 +211,6 @@ The language selector currently supports **English** on `develop`. Additional la
 - A phone-based glasses simulator for development and rehearsal.
 
 Display output targets **Meta Ray-Ban Display** glasses. Standard glasses without a display cannot show these visual cues. The simulator is a preview on the phone and does not represent a live hardware connection.
-
-## ▶️ A typical session
-
-1. Open **AI Script Studio** and enter a topic, notes, tone, format, and duration—or write a script manually.
-2. Review the draft, make changes, and optionally generate cue sections.
-3. Save it to your library.
-4. Start presenting in **Phone** mode or preview **Glasses** mode.
-5. With compatible glasses connected, send cues to the display and use available wearable controls to navigate.
 
 > [!TIP]
 > **No glasses or API key? You can still try NeuralLens.** Local editing, saved scripts, phone teleprompting, and the simulator work without either. AI features require **your own Gemini API key and an internet connection**.
