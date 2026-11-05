@@ -93,6 +93,18 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: Space.md),
                       const _Bento(),
+                      const SizedBox(height: Space.md),
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.document_scanner_outlined),
+                          title: const Text('Question Lens'),
+                          subtitle: const Text(
+                            'Capture a question. See the answer on your glasses.',
+                          ),
+                          trailing: const Icon(Icons.arrow_forward_rounded),
+                          onTap: () => context.push(Routes.questions),
+                        ),
+                      ),
                       if (resume != null) ...[
                         const SectionHeader(title: 'Continue presenting'),
                         _ContinueCard(script: resume),

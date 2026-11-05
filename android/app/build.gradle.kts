@@ -67,11 +67,14 @@ dependencies {
     // Meta Wearables Device Access Toolkit (developer preview), Maven Central.
     // Pinned to 1.0.0, the version proven against our glasses (the iOS app).
     // With 1.0.1 the glasses refused every session with
-    // DAT_APP_ON_THE_GLASSES_UPDATE_REQUIRED despite up-to-date firmware; 1.0.1
-    // only adds camera-streaming fixes this app does not use.
+    // DAT_APP_ON_THE_GLASSES_UPDATE_REQUIRED despite up-to-date firmware.
+    // Keep all DAT modules on the same version, including question capture.
     val mwdatVersion = "1.0.0"
     implementation("com.meta.wearable:mwdat-core:$mwdatVersion")
     implementation("com.meta.wearable:mwdat-display:$mwdatVersion")
+    implementation("com.meta.wearable:mwdat-camera:$mwdatVersion")
+    implementation("androidx.exifinterface:exifinterface:1.4.2")
+    testImplementation("junit:junit:4.13.2")
     // Experimental: usable for development and beta testing only.
     implementation("com.meta.wearable:mwdat-inputs:$mwdatVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")

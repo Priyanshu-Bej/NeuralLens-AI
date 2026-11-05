@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:neurallens/features/scripts/models/script.dart';
 import 'package:neurallens/features/scripts/models/script_enums.dart';
@@ -59,6 +60,22 @@ class FakeWearablesService implements WearablesService {
 
   @override
   Future<void> disconnect() async {}
+
+  @override
+  Future<void> setQuestionMode(bool enabled) async {}
+
+  @override
+  Stream<CameraPreviewFrame> get cameraPreview => const Stream.empty();
+
+  @override
+  Future<void> startCameraPreview() async {}
+
+  @override
+  Future<void> stopCameraPreview() async {}
+
+  @override
+  Future<Uint8List> capturePhoto({double zoom = 1}) async =>
+      Uint8List.fromList([0xff, 0xd8, 0xff, 0xd9]);
 
   @override
   Future<void> dispose() async {

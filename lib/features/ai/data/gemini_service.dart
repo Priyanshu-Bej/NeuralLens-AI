@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
 import '../../../core/config/app_config.dart';
 import '../../scripts/models/script_enums.dart';
+import '../../questions/data/question_prompt.dart';
+import '../../questions/models/question_answer.dart';
 import '../models/generated_script.dart';
 import 'gemini_exception.dart';
 import 'prompts.dart';
@@ -81,6 +84,59 @@ class GeminiService {
     required ScriptTone tone,
     required double temperature,
   }) async {
+    final text = await _request(
+      system: Prompts.system,
+      parts: [
+        {'text': prompt},
+      ],
+      schema: Prompts.responseSchema,
+      temperature: temperature,
+    );
+    try {
+      return GeneratedScript.parse(text, format: format, tone: tone);
+    } on FormatException catch (e) {
+      throw GeminiException(GeminiErrorKind.invalidResponse, detail: e.message);
+    }
+  }
+
+  Future<QuestionAnswer> answerQuestion(Uint8List jpeg) async {
+    if (jpeg.length < 3 ||
+        jpeg.length > 8 * 1024 * 1024 ||
+        jpeg[0] != 0xff ||
+        jpeg[1] != 0xd8 ||
+        jpeg[2] != 0xff) {
+      throw const GeminiException(
+        GeminiErrorKind.badRequest,
+        detail: 'Expected a JPEG under 8 MB',
+      );
+    }
+    final text = await _request(
+      system: QuestionPrompt.system,
+      parts: [
+        {
+          'inlineData': {'mimeType': 'image/jpeg', 'data': base64Encode(jpeg)},
+        },
+        {
+          'text':
+              'Answer the question in this photo, including any visible code, diagrams, or answer options.',
+        },
+      ],
+      schema: QuestionPrompt.schema,
+      temperature: 0.1,
+    );
+    try {
+      return QuestionAnswer.parse(text);
+    } on FormatException {
+      throw const GeminiException(GeminiErrorKind.invalidResponse);
+    }
+  }
+
+  Future<String> _request({
+    required String system,
+    required List<Map<String, Object>> parts,
+    required Map<String, Object?> schema,
+    required double temperature,
+  }) async {
     if (!isConfigured) {
       throw const GeminiException(GeminiErrorKind.missingKey);
     }
@@ -91,21 +147,16 @@ class GeminiService {
     final body = jsonEncode({
       'systemInstruction': {
         'parts': [
-          {'text': Prompts.system},
+          {'text': system},
         ],
       },
       'contents': [
-        {
-          'role': 'user',
-          'parts': [
-            {'text': prompt},
-          ],
-        },
+        {'role': 'user', 'parts': parts},
       ],
       'generationConfig': {
         'temperature': temperature,
         'responseMimeType': 'application/json',
-        'responseSchema': Prompts.responseSchema,
+        'responseSchema': schema,
       },
     });
 
@@ -142,14 +193,7 @@ class GeminiService {
     }
 
     // JSON is always UTF-8; don't rely on the charset header.
-    final text = _extractText(
-      utf8.decode(response.bodyBytes, allowMalformed: true),
-    );
-    try {
-      return GeneratedScript.parse(text, format: format, tone: tone);
-    } on FormatException catch (e) {
-      throw GeminiException(GeminiErrorKind.invalidResponse, detail: e.message);
-    }
+    return _extractText(utf8.decode(response.bodyBytes, allowMalformed: true));
   }
 
   GeminiException _httpError(http.Response response) {

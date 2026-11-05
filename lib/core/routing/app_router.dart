@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/ai/ui/ai_studio_screen.dart';
 import '../../features/home/ui/home_screen.dart';
+import '../../features/questions/ui/question_screen.dart';
 import '../../features/presentation/models/presentation_settings.dart';
 import '../../features/presentation/ui/presentation_screen.dart';
 import '../../features/scripts/models/script_enums.dart';
@@ -18,6 +19,7 @@ abstract final class Routes {
   static const settings = '/settings';
   static const studio = '/studio';
   static const glasses = '/glasses';
+  static const questions = '/questions';
 
   static String editor(String id) => '/editor/$id';
 
@@ -68,6 +70,11 @@ GoRouter buildRouter() {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        parentNavigatorKey: rootKey,
+        path: Routes.questions,
+        builder: (_, _) => const QuestionScreen(),
       ),
       GoRoute(
         parentNavigatorKey: rootKey,

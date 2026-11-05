@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:equatable/equatable.dart';
 
 /// Connection lifecycle as reported by the platform SDK. Never synthesized
@@ -71,7 +73,7 @@ class WearablesState extends Equatable {
 }
 
 /// Discrete control events mapped from the SDK's input events.
-enum WearableInput { next, previous, select, back }
+enum WearableInput { next, previous, select, back, capture }
 
 /// Compact payload for a glasses display: short lines, not a full script.
 class GlassesCue extends Equatable {
@@ -104,4 +106,17 @@ class GlassesCue extends Equatable {
 
   @override
   List<Object?> get props => [heading, lines, position, total, next, paused];
+}
+
+/// A local-only preview frame. Never submitted to the AI service.
+class CameraPreviewFrame {
+  const CameraPreviewFrame({
+    required this.jpeg,
+    required this.width,
+    required this.height,
+  });
+  final Uint8List jpeg;
+  final int width;
+  final int height;
+  double get aspectRatio => width / height;
 }

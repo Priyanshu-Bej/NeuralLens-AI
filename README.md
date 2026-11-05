@@ -13,6 +13,7 @@ This is an Android-first Flutter MVP. The code is laid out so iOS can be added l
   - **Phone mode**: smooth scrolling with a reading-line marker; adjustable speed and font size; mirror mode; previous/next cue and section controls; restart; a progress bar; the screen stays awake. Your position is saved when you pause or exit.
   - **Glasses mode**: a compact cue layout made for a 600×600 display. It shows on the phone as a **simulator** and is sent to real glasses when they're connected.
 - **Meta glasses**: a native Kotlin bridge to Meta's official Wearables Device Access Toolkit (DAT 1.0.0). It covers registration, a display-capable session, cue rendering and Neural Band / touch input.
+- **Question Lens**: capture a coding, multiple-choice, or open-ended question from the glasses camera, transfer the photo to the phone, ask Gemini, and show a concise answer on the glasses. Supports repeat capture, photo preview, explanation, retake guidance and retry.
 - **Settings**: default font size, speed and mode; mirror; theme (dark, light, system); Neural Band mapping; Gemini and glasses status; app version.
 
 The app works with **no Gemini key and no glasses**. AI actions then explain how to configure Gemini, and the simulator still works.
@@ -91,6 +92,72 @@ Also register the app's callback URL scheme (`neurallens`, declared in `AndroidM
   - which Nav direction feels like "forward". There's an *Invert navigation* setting if it's backwards.
 - iOS has no glasses bridge yet. On iOS the app reports the integration as unavailable.
 
+## Question Lens: capture → answer → repeat
+
+Open **Home → Question Lens** on Android. Connect your Meta Ray-Ban Display glasses
+using **Connect glasses**, then return to Question Lens. Configure Gemini using
+`.env` as described above before capturing.
+
+1. Tap **Open camera**. On first use, approve the **camera** permission in Meta AI.
+   This opens a live preview from the glasses on your phone; it does **not** take a
+   photo or send preview frames to Gemini.
+2. Frame **one complete question, including any code, diagrams, or options**, and
+   adjust the **1×–3× digital zoom** slider. Zoom crops the center of the preview and the actual photo sent to AI.
+3. Press **Take photo & answer** when ready. Only this shutter action captures and
+   uploads a photo. The phone shows the recognized question/options, suggested
+   answer and explanation; the glasses show a concise answer summary. Coding solutions
+   appear in a selectable code block on the phone, with indentation preserved.
+4. Use **Open camera for next question** to repeat the preview and manual shutter.
+   **Close camera** cancels without taking or uploading a photo.
+
+With Meta's experimental Inputs access enabled, **next** opens the preview only.
+A **short capture-button press** or **select** opens the preview on its first press,
+then fires the shutter on a separate press while the preview is ready. Input during
+camera startup or analysis is ignored. A stale or failed preview disables capture.
+
+Question Lens automatically distinguishes MCQs (including coding MCQs), coding
+problems, and open-ended/subjective questions. Options are required only for MCQs.
+Subjective answers provide a reasoned sample response; code generation respects the
+visible language and constraints (defaulting to Python when unspecified).
+
+Unreadable or cropped questions produce **Retake photo**. Legible questions that
+cannot be answered reliably produce **Could not answer** with a request for context.
+The phone retains the full answer, explanation, and any code; the glasses receive a
+short summary. AI answers may still be incorrect, and generated code is not executed.
+If the request fails,
+**Retry this photo** reuses the current image; if display delivery fails, the answer
+remains on the phone with **Send to glasses again**.
+
+Implementation uses the pinned DAT **1.0.0** `mwdat-camera` module:
+`session.addCamera` → `stream.start` → local preview frames → explicit
+`stream.capturePhoto`, then closes the camera capability after transfer. Preview
+frames are converted off the UI thread and capped at 5 fps. The camera also closes
+on cancel, screen exit, or backgrounding an active preview. HEIC captures are decoded
+with EXIF orientation, center-cropped to the preview aspect ratio and selected zoom,
+and converted to JPEG, bounded to a 2048-pixel long edge and 8 MB. Gemini receives
+inline image data with a separate structured question schema. Validation rejects
+unknown MCQ labels, duplicate options, inconsistent question formats and incomplete results.
+
+- Keep Question Lens open in the foreground. This feature captures through an
+  active SDK session; it does not import photos taken outside the app from Meta's gallery.
+- Capture-button input is enabled only in Question Lens; leaving it restores the
+  teleprompter's input configuration and cancels any pending camera capture.
+- Photos and answers are not written to the local database or gallery. The current
+  image is submitted to Google Gemini for processing using the configured key.
+- Disconnecting or leaving the screen invalidates pending AI results; they cannot
+  update a later question. Leaving does not revoke an HTTP request already sent.
+- Visual output requires **Meta Ray-Ban Display**. The existing connection selector
+  excludes glasses without a display. iOS has no native bridge yet.
+- Automated tests and an Android debug build validate this implementation;
+  **the capture/button/display loop has not yet been tested on physical glasses**.
+
+API references: [Meta's CameraAccess sample](https://github.com/meta/meta-wearables-dat-android/tree/main/samples/CameraAccess)
+and [Gemini image understanding](https://ai.google.dev/gemini-api/docs/image-understanding).
+For a device check, capture two different questions in succession, deny then grant
+camera permission, disconnect during analysis, and verify the phone fallback when
+display delivery fails. Check that capture controls return to their normal behavior
+when leaving Question Lens.
+
 ## Project structure
 
 ```
@@ -101,6 +168,7 @@ lib/
   features/
     ai/                            # GeminiService, prompts, GeneratedScript parsing, Studio UI
     scripts/                       # models, repository, cue segmenter, duration estimator, library + editor
+    questions/                     # Camera → Gemini answer workflow, validation and UI
     presentation/                  # PresentationCubit state machine, phone teleprompter, glasses cue view
     wearables/                     # WearablesService interface, Meta platform-channel service, UI
     settings/                      # SharedPreferences-backed settings
@@ -121,3 +189,8 @@ State management uses `flutter_bloc` cubits, navigation uses `go_router`, script
 - editor autosave and AI-revision confirmation
 - the presentation state machine, including glasses output and band input mapping with a fake device
 - launch smoke tests with no API key and no glasses
+- question parsing, JPEG request payload, preview-before-shutter, zoom selection,
+  cancellation, repeat captures, permission/network errors, delivery retry, disconnect
+  and late-result handling
+
+Native zoom-crop geometry tests: `cd android && ./gradlew :app:testDebugUnitTest`.

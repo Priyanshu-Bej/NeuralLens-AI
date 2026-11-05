@@ -15,11 +15,14 @@ class MetaWearablesService implements WearablesService {
     this._methods = const MethodChannel('neurallens/wearables'),
     this._stateEvents = const EventChannel('neurallens/wearables/state'),
     this._inputEvents = const EventChannel('neurallens/wearables/inputs'),
+    this._cameraEvents = const EventChannel('neurallens/wearables/camera'),
   });
 
   final MethodChannel _methods;
   final EventChannel _stateEvents;
   final EventChannel _inputEvents;
+  final EventChannel _cameraEvents;
+  Stream<CameraPreviewFrame>? _preview;
 
   final _states = StreamController<WearablesState>.broadcast();
   StreamSubscription<Object?>? _stateSub;
@@ -138,6 +141,57 @@ class MetaWearablesService implements WearablesService {
 
   static WearableInput? _parseInput(Object? event) =>
       WearableInput.values.where((i) => i.name == event).firstOrNull;
+
+  @override
+  Future<void> setQuestionMode(bool enabled) async {
+    await _methods.invokeMethod<void>('setQuestionMode', {'enabled': enabled});
+  }
+
+  @override
+  Stream<CameraPreviewFrame> get cameraPreview =>
+      _preview ??= _cameraEvents.receiveBroadcastStream().map((event) {
+        if (event is! Map ||
+            event['jpeg'] is! Uint8List ||
+            event['width'] is! int ||
+            event['height'] is! int ||
+            (event['width'] as int) <= 0 ||
+            (event['height'] as int) <= 0) {
+          throw const FormatException('Invalid camera preview frame');
+        }
+        return CameraPreviewFrame(
+          jpeg: event['jpeg'] as Uint8List,
+          width: event['width'] as int,
+          height: event['height'] as int,
+        );
+      });
+
+  @override
+  Future<void> startCameraPreview() =>
+      _methods.invokeMethod<void>('startCameraPreview');
+
+  @override
+  Future<void> stopCameraPreview() =>
+      _methods.invokeMethod<void>('stopCameraPreview');
+
+  @override
+  Future<Uint8List> capturePhoto({double zoom = 1}) async {
+    if (!_state.isConnected) {
+      throw PlatformException(
+        code: 'disconnected',
+        message: 'Connect your glasses first.',
+      );
+    }
+    final bytes = await _methods.invokeMethod<Uint8List>('capturePhoto', {
+      'zoom': zoom,
+    });
+    if (bytes == null || bytes.isEmpty) {
+      throw PlatformException(
+        code: 'empty_photo',
+        message: 'No photo arrived. Try again.',
+      );
+    }
+    return bytes;
+  }
 
   @override
   Future<void> dispose() async {

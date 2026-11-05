@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../models/wearables_models.dart';
 
 /// Hardware abstraction for smart glasses.
@@ -30,6 +32,16 @@ abstract interface class WearablesService {
   /// Replaces the glasses display content. Returns false when not shown.
   Future<bool> showCue(GlassesCue cue);
   Future<void> clearDisplay();
+
+  /// Enables capture-button input only while Question Lens is open.
+  Future<void> setQuestionMode(bool enabled);
+
+  Stream<CameraPreviewFrame> get cameraPreview;
+  Future<void> startCameraPreview();
+  Future<void> stopCameraPreview();
+
+  /// Manual shutter; requires an open preview. Zoom crops both preview and photo.
+  Future<Uint8List> capturePhoto({double zoom = 1});
 
   Future<void> dispose();
 }
@@ -72,6 +84,26 @@ class UnsupportedWearablesService implements WearablesService {
 
   @override
   Future<void> clearDisplay() async {}
+
+  @override
+  Future<void> setQuestionMode(bool enabled) async {}
+
+  @override
+  Stream<CameraPreviewFrame> get cameraPreview => const Stream.empty();
+
+  @override
+  Future<void> startCameraPreview() async => throw UnsupportedError(
+    'Glasses camera requires the Android Meta bridge.',
+  );
+
+  @override
+  Future<void> stopCameraPreview() async {}
+
+  @override
+  Future<Uint8List> capturePhoto({double zoom = 1}) async =>
+      throw UnsupportedError(
+        'Glasses camera requires the Android Meta bridge.',
+      );
 
   @override
   Future<void> dispose() async {}

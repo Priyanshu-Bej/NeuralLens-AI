@@ -1,7 +1,7 @@
 package com.priyanshubej.neurallens
 
 import android.Manifest
-import android.app.Activity
+import androidx.activity.ComponentActivity
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
@@ -28,6 +28,7 @@ import com.meta.wearable.dat.display.views.TextStyle
 import com.meta.wearable.dat.inputs.Inputs
 import com.meta.wearable.dat.inputs.addInputs
 import com.meta.wearable.dat.inputs.removeInputs
+import com.meta.wearable.dat.inputs.types.CapturePressType
 import com.meta.wearable.dat.inputs.types.InputEvent
 import com.meta.wearable.dat.inputs.types.InputSource
 import com.meta.wearable.dat.inputs.types.InputsConfiguration
@@ -42,6 +43,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -52,21 +55,26 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Flutter bridge to the Meta Wearables Device Access Toolkit (DAT 1.0.0).
  *
  * Only APIs present in the published SDK and its official samples are used:
- * registration, a display-capable device session, the Display capability and
- * the experimental Inputs capability. State sent to Dart always reflects what
+ * registration, a display-capable device session, Camera and Display capabilities,
+ * and the experimental Inputs capability. State sent to Dart always reflects what
  * the SDK reports; nothing here simulates a connection.
  */
 class MetaWearablesBridge(
-    private val activity: Activity,
+    private val activity: ComponentActivity,
     messenger: BinaryMessenger,
 ) : MethodChannel.MethodCallHandler {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val displayMutex = Mutex()
     private val methods = MethodChannel(messenger, "neurallens/wearables")
     private val stateEvents = EventChannel(messenger, "neurallens/wearables/state")
     private val inputEvents = EventChannel(messenger, "neurallens/wearables/inputs")
 
     private var stateSink: EventChannel.EventSink? = null
     private var inputSink: EventChannel.EventSink? = null
+
+    private val questionCamera = MetaQuestionCamera(activity, messenger, scope) { session }
+    private var questionMode = false
+    private val inputJobs = mutableListOf<Job>()
 
     private var initialized = false
     private var registration: RegistrationState = RegistrationState.UNAVAILABLE
@@ -170,6 +178,30 @@ class MetaWearablesBridge(
             "disconnect" -> {
                 stopSession()
                 result.success(null)
+            }
+            "setQuestionMode" -> {
+                val enabled = call.argument<Boolean>("enabled") == true
+                if (questionMode != enabled) {
+                    questionMode = enabled
+                    if (!enabled) questionCamera.cancel()
+                    session?.let {
+                        detachInputs(it)
+                        if (sessionState == DeviceSessionState.STARTED) attachInputs(it)
+                    }
+                }
+                result.success(null)
+            }
+            "startCameraPreview" -> {
+                if (questionMode) questionCamera.startPreview(result)
+                else result.error("camera_inactive", "Open Question Lens before using the camera.", null)
+            }
+            "stopCameraPreview" -> {
+                questionCamera.cancel()
+                result.success(null)
+            }
+            "capturePhoto" -> {
+                if (questionMode) questionCamera.capture(call.argument<Double>("zoom") ?: 1.0, result)
+                else result.error("camera_inactive", "Open Question Lens before capturing.", null)
             }
             "showCue" -> showCue(call, result)
             "clearDisplay" -> clearDisplay(result)
@@ -543,19 +575,23 @@ class MetaWearablesBridge(
         if (inputs != null) return
         session.addInputs(
             InputsConfiguration(
-                sources = setOf(InputSource.NEURAL_BAND, InputSource.CAPTOUCH),
+                sources = buildSet {
+                    add(InputSource.NEURAL_BAND)
+                    add(InputSource.CAPTOUCH)
+                    if (questionMode) add(InputSource.CAPTURE_BUTTON)
+                },
                 consumeBack = true,
             ),
         )
             .onSuccess { newInputs ->
                 inputs = newInputs
-                sessionJobs += scope.launch {
+                inputJobs += scope.launch {
                     newInputs.state.collect { state ->
                         if (state == InputsState.ACTIVE) inputsAvailability = "available"
                         emitState()
                     }
                 }
-                sessionJobs += scope.launch {
+                inputJobs += scope.launch {
                     newInputs.errors.collect { error ->
                         if (error == null) return@collect
                         inputsAvailability =
@@ -563,12 +599,20 @@ class MetaWearablesBridge(
                         emitState()
                     }
                 }
-                sessionJobs += scope.launch { newInputs.events.collect(::onInputEvent) }
+                inputJobs += scope.launch { newInputs.events.collect(::onInputEvent) }
             }
             .onFailure { _, _ ->
                 inputsAvailability = "unavailable"
                 emitState()
             }
+    }
+
+    private fun detachInputs(current: DeviceSession) {
+        inputJobs.forEach { it.cancel() }
+        inputJobs.clear()
+        if (inputs != null) current.removeInputs()
+        inputs = null
+        inputsAvailability = "unknown"
     }
 
     private fun onInputEvent(event: InputEvent) {
@@ -581,7 +625,9 @@ class MetaWearablesBridge(
                     }
                 is InputEvent.Select -> "select"
                 is InputEvent.Back -> "back"
-                else -> null // Button, Capture, Drag: not used by the teleprompter.
+                is InputEvent.Capture ->
+                    if (questionMode && event.pressType == CapturePressType.SHORT_PRESS) "capture" else null
+                else -> null // Button / Drag are unused.
             }
         if (mapped != null) inputSink?.success(mapped)
     }
@@ -595,7 +641,7 @@ class MetaWearablesBridge(
             emitState()
         }
         val current = session ?: return
-        if (inputs != null) current.removeInputs()
+        detachInputs(current)
         if (display != null) current.removeDisplay()
         current.stop()
         releaseSession()
@@ -603,6 +649,9 @@ class MetaWearablesBridge(
     }
 
     private fun releaseSession() {
+        questionCamera.cancel()
+        inputJobs.forEach { it.cancel() }
+        inputJobs.clear()
         sessionJobs.forEach { it.cancel() }
         sessionJobs.clear()
         session = null
@@ -631,39 +680,46 @@ class MetaWearablesBridge(
         val paused = call.argument<Boolean>("paused") ?: false
 
         scope.launch {
-            // Each sendContent call replaces the whole display.
-            target.sendContent {
-                flexBox(gap = 8, padding = 24, background = FlexBoxBackground.NONE) {
-                    text(heading.uppercase(), style = TextStyle.META, color = TextColor.SECONDARY)
-                    lines.forEach { text(it, style = TextStyle.HEADING) }
-                    if (!next.isNullOrBlank()) {
-                        text(next, style = TextStyle.BODY, color = TextColor.SECONDARY)
-                    }
-                    text(
-                        "$position / $total" + if (paused) "  ·  Paused" else "",
-                        style = TextStyle.META,
-                        color = TextColor.SECONDARY,
+            // Serialize replacements and clears: a slow answer send must finish
+            // before the next capture clears the old answer.
+            val shown = withTimeoutOrNull(10_000L) {
+                displayMutex.withLock {
+                    if (display !== target || !displayReady) return@withLock false
+                    target.sendContent {
+                        flexBox(gap = 8, padding = 24, background = FlexBoxBackground.NONE) {
+                            text(heading.uppercase(), style = TextStyle.META, color = TextColor.SECONDARY)
+                            lines.forEach { text(it, style = TextStyle.HEADING) }
+                            if (!next.isNullOrBlank()) {
+                                text(next, style = TextStyle.BODY, color = TextColor.SECONDARY)
+                            }
+                            text(
+                                "$position / $total" + if (paused) "  ·  Paused" else "",
+                                style = TextStyle.META,
+                                color = TextColor.SECONDARY,
+                            )
+                        }
+                    }.fold(
+                        onSuccess = { true },
+                        onFailure = { error, _ ->
+                            errorMessage = "Display update failed: ${error.description}"
+                            emitState()
+                            false
+                        },
                     )
                 }
-            }
-                .onSuccess { result.success(true) }
-                .onFailure { error, _ ->
-                    errorMessage = "Display update failed: ${error.description}"
-                    emitState()
-                    result.success(false)
-                }
+            } ?: false
+            result.success(shown)
         }
     }
 
     private fun clearDisplay(result: MethodChannel.Result) {
-        val target = display
-        if (target == null) {
-            result.success(null)
-            return
-        }
         scope.launch {
-            target.clearDisplay()
-            result.success(null)
+            val cleared = withTimeoutOrNull(10_000L) {
+                displayMutex.withLock { display?.clearDisplay() }
+                true
+            } ?: false
+            if (cleared) result.success(null)
+            else result.error("display_timeout", "The glasses display did not respond. Try again.", null)
         }
     }
 
@@ -701,6 +757,7 @@ class MetaWearablesBridge(
     }
 
     fun dispose() {
+        questionCamera.dispose()
         stopSession()
         scope.cancel()
         methods.setMethodCallHandler(null)

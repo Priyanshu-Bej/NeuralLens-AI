@@ -69,6 +69,25 @@ void main() {
     expect(find.text('Your library is empty'), findsOneWidget);
   });
 
+  testWidgets('Question Lens opens and explains missing camera and AI setup', (
+    tester,
+  ) async {
+    await tester.pumpWidget(NeuralLensApp(deps: await deps(tester)));
+    await settle(tester);
+    await tester.scrollUntilVisible(find.text('Question Lens'), 150);
+    await tester.tap(find.text('Question Lens'));
+    await settle(tester);
+    expect(find.text('Look. Capture. Understand.'), findsOneWidget);
+    expect(find.text('Connect glasses'), findsOneWidget);
+    expect(find.textContaining('Gemini setup is required.'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Open camera'), 100);
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Open camera'),
+    );
+    expect(button.onPressed, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('AI studio explains how to configure Gemini', (tester) async {
     await tester.pumpWidget(NeuralLensApp(deps: await deps(tester)));
     await settle(tester);

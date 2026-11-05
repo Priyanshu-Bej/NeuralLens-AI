@@ -309,6 +309,8 @@ class PresentationCubit extends Cubit<PresentationState> {
             : nextCue();
       case WearableInput.back:
         pause();
+      case WearableInput.capture:
+        break;
     }
   }
 

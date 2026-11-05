@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -10,6 +11,9 @@ import 'package:neurallens/features/ai/data/gemini_exception.dart';
 import 'package:neurallens/features/ai/data/gemini_service.dart';
 import 'package:neurallens/features/ai/models/generated_script.dart';
 import 'package:neurallens/features/scripts/models/script_enums.dart';
+
+import 'question_answer_test.dart'
+    show codingQuestionJson, openEndedQuestionJson;
 
 const _config = AppConfig(geminiApiKey: 'test-key', geminiModel: 'test-model');
 const _request = ScriptGenerationRequest(notes: 'A product launch');
@@ -60,6 +64,98 @@ Future<GeminiErrorKind> _kindOf(Future<Object?> future) async {
 }
 
 void main() {
+  test(
+    'question capture sends JPEG inline and validates the selected option',
+    () async {
+      final jpeg = Uint8List.fromList([0xff, 0xd8, 0xff, 0xd9]);
+      late http.Request captured;
+      final service = _service((req) async {
+        captured = req;
+        return http.Response(
+          _envelope({
+            'status': 'answered',
+            'kind': 'multiple_choice',
+            'answer': '4',
+            'code': '',
+            'codeLanguage': '',
+            'glassesSummary': 'B. 4',
+            'question': '2 + 2?',
+            'options': [
+              {'label': 'A', 'text': '3'},
+              {'label': 'B', 'text': '4'},
+            ],
+            'selectedLabel': 'B',
+            'explanation': 'Two plus two is four.',
+          }),
+          200,
+        );
+      });
+      final answer = await service.answerQuestion(jpeg);
+      final body = jsonDecode(captured.body) as Map<String, dynamic>;
+      final parts =
+          (body['contents'] as List<dynamic>).single['parts'] as List<dynamic>;
+      expect(parts.first['inlineData']['mimeType'], 'image/jpeg');
+      expect(parts.first['inlineData']['data'], base64Encode(jpeg));
+      expect(captured.headers['x-goog-api-key'], 'test-key');
+      expect(captured.url.query, isEmpty);
+      expect(answer.answerText, 'B. 4');
+    },
+  );
+
+  for (final resultJson in [codingQuestionJson, openEndedQuestionJson]) {
+    test(
+      'vision request accepts ${resultJson['kind']} without options',
+      () async {
+        final service = _service((request) async {
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          final schema =
+              (body['generationConfig']
+                      as Map<String, dynamic>)['responseSchema']
+                  as Map<String, dynamic>;
+          expect(
+            schema['required'],
+            containsAll(['kind', 'answer', 'code', 'glassesSummary']),
+          );
+          return http.Response(_envelope(resultJson), 200);
+        });
+        final result = await service.answerQuestion(
+          Uint8List.fromList([0xff, 0xd8, 0xff, 0xd9]),
+        );
+        expect(result.hasAnswer, isTrue);
+        expect(result.answerText, resultJson['answer']);
+      },
+    );
+  }
+
+  test(
+    'question input rejects invalid or oversized photos without HTTP',
+    () async {
+      final service = _service(
+        (_) async => fail('Must not upload invalid photo'),
+      );
+      expect(
+        await _kindOf(service.answerQuestion(Uint8List(0))),
+        GeminiErrorKind.badRequest,
+      );
+      expect(
+        await _kindOf(service.answerQuestion(Uint8List(8 * 1024 * 1024 + 1))),
+        GeminiErrorKind.badRequest,
+      );
+    },
+  );
+
+  test('question output maps malformed JSON to a typed error', () async {
+    final service = _service(
+      (_) async => http.Response(_envelope({'selectedLabel': 'Z'}), 200),
+    );
+    expect(
+      await _kindOf(
+        service.answerQuestion(Uint8List.fromList([0xff, 0xd8, 0xff])),
+      ),
+      GeminiErrorKind.invalidResponse,
+    );
+  });
+
   test('sends a structured-output request with the key in a header', () async {
     late http.Request captured;
     final service = _service((req) async {
