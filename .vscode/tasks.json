@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Flutter: Build release APK",
+      "type": "shell",
+      "command": "flutter build apk --release --dart-define-from-file=.env",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Flutter: Build release APKs (split per ABI)",
+      "type": "shell",
+      "command": "flutter build apk --release --split-per-abi --dart-define-from-file=.env",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Flutter: Build debug APK",
+      "type": "shell",
+      "command": "flutter build apk --debug --dart-define-from-file=.env",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Flutter: Install release APK on device",
+      "type": "shell",
+      "command": "flutter install --release",
+      "dependsOn": "Flutter: Build release APK",
+      "problemMatcher": []
+    },
+    {
+      "label": "Flutter: Clean",
+      "type": "shell",
+      "command": "flutter clean && flutter pub get",
+      "problemMatcher": []
+    }
+  ]
+}

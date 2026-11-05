@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">NeuralLens — See beyond the screen.</title>
+  <desc id="description">NeuralLens branding in lime and aqua on a dark background, with the app's display-glasses mark. AI teleprompter. Android, Flutter, Gemini, Meta glasses, and Neural Band.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1200" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#181B1F"/>
+      <stop offset="1" stop-color="#060708"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="24" y1="45" x2="84" y2="63" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C8F542"/>
+      <stop offset="1" stop-color="#5BE4D8"/>
+    </linearGradient>
+    <linearGradient id="line" x1="56" y1="0" x2="1144" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C8F542"/>
+      <stop offset="1" stop-color="#5BE4D8" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="1198" height="398" rx="24" fill="url(#background)" stroke="#2A3035"/>
+  <path d="M56 40H1144" stroke="url(#line)" stroke-width="3"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="56" y="87" fill="#C8F542" font-size="13" font-weight="700" letter-spacing="3">AI TELEPROMPTER · WEARABLE ASSISTANCE</text>
+    <text x="52" y="172" fill="#F3F5F1" font-size="76" font-weight="700" letter-spacing="-3">NeuralLens</text>
+    <text x="56" y="224" fill="#F3F5F1" font-size="30">See beyond the screen.</text>
+    <text x="56" y="265" fill="#A6ADB5" font-size="18">Turn an idea into a script. Keep your next cue in view.</text>
+    <rect x="56" y="310" width="112" height="34" rx="17" fill="#C8F542"/>
+    <text x="112" y="332" text-anchor="middle" fill="#060708" font-size="13" font-weight="700">ANDROID</text>
+    <rect x="180" y="310" width="158" height="34" rx="17" fill="#20242A" stroke="#394149"/>
+    <text x="259" y="332" text-anchor="middle" fill="#F3F5F1" font-size="13">Flutter + Gemini</text>
+    <rect x="350" y="310" width="226" height="34" rx="17" fill="#20242A" stroke="#394149"/>
+    <text x="463" y="332" text-anchor="middle" fill="#F3F5F1" font-size="13">Meta glasses + Neural Band</text>
+  </g>
+  <circle cx="965" cy="200" r="136" stroke="#293A36"/>
+  <circle cx="965" cy="200" r="110" stroke="#1F2B2B"/>
+  <path d="M819 200H833M1097 200H1111M965 54V68M965 332V346" stroke="#5BE4D8" stroke-opacity="0.5" stroke-width="2"/>
+  <!-- Lens and HUD geometry follow NeuralLensLogo in lib/core/widgets/common.dart. -->
+  <g transform="translate(749 0) scale(4)">
+    <path d="M27 45H48Q51 45 51 48C50.5 53 48 63 42 63H33C27 63 24.5 53 24 48Q24 45 27 45Z" fill="#FFFFFF" fill-opacity="0.06"/>
+    <path d="M60 45H81Q84 45 84 48C83.5 53 81 63 75 63H66C60 63 57.5 53 57 48Q57 45 60 45Z" fill="#FFFFFF" fill-opacity="0.06"/>
+    <rect x="63.5" y="47.6" width="15" height="8.8" rx="2.6" fill="#5BE4D8" fill-opacity="0.25"/>
+    <rect x="65" y="49" width="12" height="6" rx="1.6" fill="url(#brand)"/>
+    <g stroke="url(#brand)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M27 45H48Q51 45 51 48C50.5 53 48 63 42 63H33C27 63 24.5 53 24 48Q24 45 27 45Z"/>
+      <path d="M60 45H81Q84 45 84 48C83.5 53 81 63 75 63H66C60 63 57.5 53 57 48Q57 45 60 45Z"/>
+      <path d="M51 48Q54 45.5 57 48"/>
+    </g>
+  </g>
+</svg>
